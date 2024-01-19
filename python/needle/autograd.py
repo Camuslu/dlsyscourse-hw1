@@ -382,19 +382,20 @@ def compute_gradient_of_variables(output_tensor, out_grad):
 
     ### BEGIN YOUR SOLUTION
     for node_i in reverse_topo_order: # the first node_i would be the output_tensor here
-        print("new node i ...")
-        v_node_i = sum(node_to_output_grads_list[node_i])  
+        v_node_i = sum_node_list(node_to_output_grads_list[node_i])  
+        print("new node i ... op = ", node_i.op)
+        print("v_node_i = ", v_node_i)
         node_i.grad = v_node_i
         node_i_op = node_i.op
         if node_i_op is None:
             continue # leaf node has no inputs
-        v_k_to_i_list = node_i.op.gradient(out_grad=v_node_i, node=node_i) # v_node_i here is the "out_grad"
+        v_k_to_i_list = node_i_op.gradient(out_grad=v_node_i, node=node_i) # v_node_i here is the "out_grad"
         if type(v_k_to_i_list) is not tuple: # case if only one input to the node_i Tensor
             v_k_to_i_list = [v_k_to_i_list] # v_k1_i => [v_k1_i]
         else:
             v_k_to_i_list = list(v_k_to_i_list) # (v_k1_i, v_k2_i) => [v_k1_i, v_k2_i]
         for k, node_k in enumerate(node_i.inputs):
-            print(f"""tianhao debug, node_k shape = {node_k.shape}, v_k_to_i shape = {v_k_to_i_list[k].shape}, v_k_to_i = {v_k_to_i_list[k].cached_data}""")
+            # print(f"""tianhao debug, node_k shape = {node_k.shape}, v_k_to_i shape = {v_k_to_i_list[k].shape}, v_k_to_i = {v_k_to_i_list[k].cached_data}""")
             node_to_output_grads_list[node_k] = node_to_output_grads_list.get(node_k, [])
             node_to_output_grads_list[node_k].append(v_k_to_i_list[k])
     ### END YOUR SOLUTION

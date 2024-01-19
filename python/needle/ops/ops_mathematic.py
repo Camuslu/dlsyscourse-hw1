@@ -42,12 +42,12 @@ def add_scalar(a, scalar):
 
 
 class EWiseMul(TensorOp):
-    def compute(self, a: NDArray, b: NDArray):
-        return a * b
+    def compute(self, a, b: NDArray):
+        return array_api.multiply(a, b)
 
     def gradient(self, out_grad: Tensor, node: Tensor):
         lhs, rhs = node.inputs
-        return out_grad * rhs, out_grad * lhs
+        return (EWiseMul()(out_grad, rhs), (EWiseMul()(out_grad, lhs)))
 
 
 def multiply(a, b):
@@ -61,8 +61,8 @@ class MulScalar(TensorOp):
     def compute(self, a: NDArray):
         return a * self.scalar
 
-    def gradient(self, out_grad: Tensor, node: Tensor):
-        return (out_grad * self.scalar,)
+    def gradient(self, out_grad: Tensor, node: Tensor):        
+        return mul_scalar(self.scalar, out_grad)
 
 
 def mul_scalar(a, scalar):
@@ -83,7 +83,7 @@ class PowerScalar(TensorOp):
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
         a = node.inputs[0]
-        return (self.scalar) * power_scalar(a, self.scalar - 1) * out_grad
+        return ((self.scalar) * power_scalar(a, self.scalar - 1) * out_grad,)
         ### END YOUR SOLUTION
 
 
@@ -142,7 +142,8 @@ class DivScalar(TensorOp):
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        return out_grad / self.scalar
+        # return (out_grad / self.scalar,)
+        return divide_scalar(out_grad, self.scalar)
         ### END YOUR SOLUTION
 
 
@@ -164,7 +165,7 @@ class Transpose(TensorOp):
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        return transpose(out_grad, self.axes)
+        return (transpose(out_grad, self.axes),)
         ### END YOUR SOLUTION
 
 
@@ -183,7 +184,7 @@ class Reshape(TensorOp):
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        return reshape(out_grad, node.inputs[0].shape)
+        return (reshape(out_grad, node.inputs[0].shape),)
         ### END YOUR SOLUTION
 
 
@@ -219,7 +220,7 @@ class BroadcastTo(TensorOp):
                 if a_shape[i] != self.shape[i]:
                     axes.append(i)
             axes = tuple(axes)
-        return reshape(summation(out_grad, axes), a_shape)
+        return (reshape(summation(out_grad, axes), a_shape),)
         ### END YOUR SOLUTION
 
 
@@ -252,7 +253,7 @@ class Summation(TensorOp):
             if i in self.axes:
                 to_shape[i] = 1
         to_shape = tuple(to_shape) #(a1,1,a3...1)
-        return broadcast_to(reshape(out_grad, to_shape), a_shape)
+        return (broadcast_to(reshape(out_grad, to_shape), a_shape),)
         ### END YOUR SOLUTION
 
 
@@ -291,7 +292,7 @@ class Negate(TensorOp):
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        return -1 * out_grad
+        return (-1 * out_grad,)
         ### END YOUR SOLUTION
 
 
@@ -302,12 +303,13 @@ def negate(a):
 class Log(TensorOp):
     def compute(self, a):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        return array_api.log(a)
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        a = node.inputs[0]
+        return EWiseDiv()(out_grad, a)
         ### END YOUR SOLUTION
 
 
@@ -318,14 +320,15 @@ def log(a):
 class Exp(TensorOp):
     def compute(self, a):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        return array_api.exp(a) 
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        a = node.inputs[0]
+        return EWiseMul()(exp(a), out_grad)        
+        # return out_grad * exp_1(node.inputs[0])
         ### END YOUR SOLUTION
-
 
 def exp(a):
     return Exp()(a)
