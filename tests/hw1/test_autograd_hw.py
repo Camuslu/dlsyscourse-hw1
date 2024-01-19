@@ -457,11 +457,7 @@ def gradient_check(f, *args, tol=1e-6, backward=False, **kwargs):
     else:
         out = f(*args, **kwargs).sum()
         out.backward()
-        computed_grads = [a.grad.numpy() for a in args]
-    print("tianhao debug")
-    # for i in range(len(args)):
-        # print("computed grads for args", i, computed_grads[i])
-        # print("numerical grads for args", i, numerical_grads[i])
+        computed_grads = [a.grad.numpy() for a in args]        
     error = sum(
         np.linalg.norm(computed_grads[i] - numerical_grads[i]) for i in range(len(args))
     )

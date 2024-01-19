@@ -383,8 +383,8 @@ def compute_gradient_of_variables(output_tensor, out_grad):
     ### BEGIN YOUR SOLUTION
     for node_i in reverse_topo_order: # the first node_i would be the output_tensor here
         v_node_i = sum_node_list(node_to_output_grads_list[node_i])  
-        print("new node i ... op = ", node_i.op)
-        print("v_node_i = ", v_node_i)
+        # print("new node i ... op = ", node_i.op)
+        # print("v_node_i = ", v_node_i)
         node_i.grad = v_node_i
         node_i_op = node_i.op
         if node_i_op is None:

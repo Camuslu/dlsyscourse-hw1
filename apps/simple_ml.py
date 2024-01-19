@@ -45,8 +45,6 @@ def parse_mnist(image_filename, label_filename):
     return x_reshaped, y_reshaped
     ### END YOUR CODE
 
-
-
 def softmax_loss(Z, y_one_hot):
     """Return softmax loss.  Note that for the purposes of this assignment,
     you don't need to worry about "nicely" scaling the numerical properties
@@ -64,10 +62,6 @@ def softmax_loss(Z, y_one_hot):
         Average softmax loss over the sample. (ndl.Tensor[np.float32])
     """
     ### BEGIN YOUR SOLUTION
-    # log_sum_exp = np.log(np.sum(np.exp(Z), axis = 1)).reshape(-1)
-    # row_indices = np.arange(len(y))
-    # Z_y = Z[row_indices, y].reshape(-1)
-    # return np.average(log_sum_exp - Z_y)
     batch_size = Z.shape[0]
     Z_exp = exp(Z) # [batch_size, k_class]
     Z_sum_exp = summation(Z_exp, axes=(1,)) # [batch_size]
@@ -103,9 +97,23 @@ def nn_epoch(X, y, W1, W2, lr=0.1, batch=100):
             W1: ndl.Tensor[np.float32]
             W2: ndl.Tensor[np.float32]
     """
-
     ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
+    classes = len(np.unique(y))
+    for step in range(X.shape[0]//batch):
+        X_batch = X[step * batch: (step+1) * batch, :] # [b_size, x_dim]
+        y_batch = y[step * batch: (step+1) * batch] # [b_size]
+        one_hot_label = np.eye(classes)[y_batch] # [b_size, class]
+        X_batch_tensor = Tensor(X_batch) #[b_size, x_dim]
+        y_batch_tensor = Tensor(one_hot_label) #[b_size, class]
+        layer_1 = relu(matmul(X_batch_tensor, W1)) #[b_size, hiddem_dim]
+        layer_2 = matmul(layer_1, W2) #[b_size, class]
+        loss = softmax_loss(layer_2, y_batch_tensor) # already averaged over batch_size
+        loss.backward()
+        W1_grad = W1.grad.realize_cached_data()
+        W1 = Tensor(W1.realize_cached_data() - W1_grad * lr)
+        W2_grad = W2.grad.realize_cached_data()
+        W2 = Tensor(W2.realize_cached_data() - W2_grad * lr)          
+    return (W1, W2)      
     ### END YOUR SOLUTION
 
 
